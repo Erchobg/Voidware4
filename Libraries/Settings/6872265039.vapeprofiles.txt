@@ -1,0 +1,1 @@
+{"default":{"Selected":false,"Keybind":""},"Render White":{"Keybind":""},"Render Crystal":{"Selected":false,"Keybind":""},"blank profile":{"Selected":false,"Keybind":""},"Voidware Pink":{"Selected":true,"Keybind":""}}
