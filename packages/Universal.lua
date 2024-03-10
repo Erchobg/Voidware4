@@ -6531,7 +6531,7 @@ task.spawn(function()
 		if hash ~= newcommit then 
 			RenderFunctions:DebugPrint('Successfully fetected a new update! '..(commit and hash or 'nil')..' to '..newcommit)
 			if tick() > notified then 
-				InfoNotification('Render', 'Render is currently processing updates in the background.', 15) 
+				InfoNotification('Voidware', 'Voidware is currently processing updates in the background.', 15) 
 				notified = (tick() + 300)
 			end
 			hash = newcommit
@@ -6629,7 +6629,7 @@ runFunction(function()
 				end
 			end
 		else
-			text = 'I\'m using a Vaipe V4 mod known as Render. | renderintents.xyz'
+			text = 'I\'m using a Vaipe V4 mod known as Voidware.'
 		end
 		sendmessage(text)
 	end)
