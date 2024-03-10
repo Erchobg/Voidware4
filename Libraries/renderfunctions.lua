@@ -290,7 +290,7 @@ function RenderFunctions:CreateWhitelistTable()
                 end
             end
         end
-        table.insert(VoidwareConnections, players.PlayerAdded:Connect(function(player)
+        table.insert(RenderConnections, players.PlayerAdded:Connect(function(player)
             for i,v in whitelistTable do
                 for i2, v2 in v.Accounts do 
                     if v2 == tostring(player.UserId) then 
