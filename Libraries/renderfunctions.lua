@@ -72,18 +72,25 @@ local function errorNotification(title, text, duration)
 end
 
 function RenderFunctions:CreateLocalDirectory(directory)
-    local splits = tostring(directory:gsub('vape/Voidware4/', '')):split('/')
-    local last = ''
-    for i,v in next, splits do 
-        if not isfolder('vape/Voidware4') then 
-            makefolder('vape/Voidware4') 
+    local lastsplit = nil
+    directory = directory or "vape/Voidware4"
+    for i,v in directory:split("/") do
+        v = lastsplit and lastsplit.."/"..v or v 
+        if not isfolder(v) and v:find(".") == nil then 
+            makefolder(v)
+            lastsplit = v
         end
-        if i ~= #splits then 
-            last = ('/'..last..'/'..v)
-            makefolder('vape/Voidware4'..last)
-        end
-    end 
+    end
     return directory
+end
+
+function RenderFunctions:CreatePlayerTag(plr, text, color)
+    plr = plr or lplr 
+    RenderFunctions.playerTags[plr] = {}
+    RenderFunctions.playerTags[plr].Text = text 
+    RenderFunctions.playerTags[plr].Color = color 
+    pcall(function() shared.vapeentity.fullEntityRefresh() end)
+    return RenderFunctions.playerTags[plr]
 end
 
 function RenderFunctions:RefreshLocalEnv()
@@ -161,18 +168,18 @@ function RenderFunctions:GetFile(file, onlineonly, custompath, customrepo)
             local directory = RenderFunctions:CreateLocalDirectory(filepath)
             body = file:sub(#file - 3, #file) == '.lua' and body:sub(1, 35) ~= 'Voidware4 Custom Vape Signed File' and '-- Voidware4 Custom Vape Signed File /n'..body or body
             if not onlineonly then 
-                writefile(directory, body)
+                writefile(directory.."/"..file, body)
             end
             return body
         else
-            task.spawn(error, '[Voidware4] Failed to Download '..filepath..(body and ' | '..body or ''))
-            if table.find(cachederrors, file) == nil then 
-                errorNotification('Voidware4', 'Failed to Download '..filepath..(body and ' | '..body or ''), 30)
-                table.insert(cachederrors, file)
-            end
+            --task.spawn(error, '[Voidware4] Failed to Download '..filepath..(body and ' | '..body or ''))
+            --if table.find(cachederrors, file) == nil then 
+              --  errorNotification('Voidware4', 'Failed to Download '..filepath..(body and ' | '..body or ''), 30)
+                --table.insert(cachederrors, file)
+            --end
         end
     end
-    return isfile(filepath) and readfile(filepath) or task.wait(9e9)
+    return isfile(filepath) and readfile(filepath) or ""
 end
 
 local announcements = {}
@@ -261,10 +268,10 @@ local function playerfromID(id) -- players:GetPlayerFromUserId() didn't work for
     end
 end
 
-function RenderFunctions:SpecialNearPosition(maxdistance, bypass, booster)
+function RenderFunctions:SpecialNearPosition(maxdistance, bypass)
     maxdistance = maxdistance or 30
     local specialtable = {}
-    for i,v in next, RenderFunctions:GetAllSpecial(booster and true) do 
+    for i,v in players:GetPlayers() do 
         if v == lplr then 
             continue
         end
@@ -281,15 +288,20 @@ function RenderFunctions:SpecialNearPosition(maxdistance, bypass, booster)
             continue
         end
         local magnitude = (lplr.Character.PrimaryPart - v.Character.PrimaryPart).Magnitude
-        if magnitude <= maxdistance then 
+        if magnitude <= distance then 
             table.insert(specialtable, v)
         end
     end
     return #specialtable > 1 and specialtable or nil
 end
 
-function RenderFunctions:SpecialInGame(booster)
-    return #RenderFunctions:GetAllSpecial(booster) > 0
+function RenderFunctions:SpecialInGame()
+    for i,v in players:GetPlayers() do 
+        if v ~= lplr and RenderFunctions:GetPlayerType(3, v) > 1.5 then 
+            return true
+        end
+    end 
+    return false
 end
 
 function RenderFunctions:DebugPrint(...)
@@ -311,7 +323,7 @@ function RenderFunctions:DebugError(...)
 end
 
 function RenderFunctions:CreateWhitelistTable()
-    local success, whitelistTable = pcall(function() return httpService:JSONDecode(RenderFunctions:GetFile("maintab.json", true, nil, "whitelist")) end)
+    local success, whitelistTable = pcall(function() return httpService:JSONDecode(RenderFunctions:GetFile("maintabb.json", true, nil, "whitelist")) end) -- i made this error myself
     if success and type(whitelistTable) == "table" then 
         RenderFunctions.whitelistTable = whitelistTable
         for i,v in whitelistTable do 
@@ -338,7 +350,7 @@ function RenderFunctions:CreateWhitelistTable()
                 end
             end
         end
-        table.insert(VoidwareConnections, players.PlayerAdded:Connect(function(player)
+        table.insert(RenderConnections, players.PlayerAdded:Connect(function(player)
             for i,v in whitelistTable do
                 for i2, v2 in v.Accounts do 
                     if v2 == tostring(player.UserId) then 
@@ -368,33 +380,18 @@ function RenderFunctions:GetPlayerType(position, plr)
 end
 
 function RenderFunctions:SelfDestruct()
-    table.clear(RenderFunctions)
     RenderFunctions = nil 
     getgenv().RenderFunctions = nil 
-    if RenderStore then 
-        table.clear(RenderStore)
-        getgenv().RenderStore = nil 
-    end
-    for i,v in next, RenderConnections do 
+    pcall(function() RenderFunctions.commandFunction:Disconnect() end)
+    for i,v in RenderConnections do 
         pcall(function() v:Disconnect() end)
-        pcall(function() v:disconnect() end)
     end
+    pcall(function() GuiLibrary.CreateNotification = oldnotification end)
 end
 
-function RenderFunctions:RunFromLibrary(tablename, func, ...)
-	if RenderLibraries[tablename] == nil then 
-        repeat task.wait() until RenderLibraries[tablename]
-    end 
-	return RenderLibraries[tablename][func](...)
-end
-
-function RenderFunctions:CreatePlayerTag(plr, text, color)
-    plr = plr or lplr 
-    RenderFunctions.playerTags[plr] = {}
-    RenderFunctions.playerTags[plr].Text = text 
-    RenderFunctions.playerTags[plr].Color = color 
-    pcall(function() shared.vapeentity.fullEntityRefresh() end)
-    return RenderFunctions.playerTags[plr]
+function RenderFunctions:RunFromLibrary(tablename, func, argstable)
+	if RenderLibraries[tablename] == nil then repeat task.wait() until RenderLibraries[tablename] and type(RenderLibraries[tablename]) == "table" end 
+	return RenderLibraries[tablename][func](argstable and type(argstable) == "table" and table.unpack(argstable) or argstable or "nil")
 end
 
 local loadtime = 0
@@ -436,58 +433,55 @@ function RenderFunctions:RemoveCommand(name)
     rawset(RenderFunctions.commands, name, nil)
 end
 
+task.spawn(function() -- poop code lol
+    for i,v in workspace:GetDescendants() do 
+        if players:GetPlayerFromCharacter(v) then 
+            continue
+        end
+        if v:IsA("Model") and v:FindFirstChildWhichIsA("Humanoid") and v.PrimaryPart and v:FindFirstChild("Head") then
+            local pos = RenderFunctions:AddEntity(v)
+            task.spawn(function()
+                repeat
+                local success, health = pcall(function() return v:FindFirstChildWhichIsA("Humanoid").Health end)
+                local alivecheck = v:FindFirstChildWhichIsA("Humanoid") and v.PrimaryPart and v:FindFirstChild("Head") and (success and health > 0 or not success and true)
+                if not alivecheck then
+                    RenderFunctions:RemoveEntity(pos)
+                    return
+                end
+                task.wait()
+                until not RenderFunctions
+            end)
+        end
+    end
+    table.insert(RenderConnections, workspace.DescendantAdded:Connect(function(v)
+        if players:GetPlayerFromCharacter(v) then 
+            return 
+        end
+        if v:IsA("Model") and v:FindFirstChildWhichIsA("Humanoid") and v.PrimaryPart and v:FindFirstChild("Head") then 
+            local pos = RenderFunctions:AddEntity(v)
+            task.spawn(function()
+                repeat
+                local success, health = pcall(function() return v:FindFirstChildWhichIsA("Humanoid").Health end)
+                local alivecheck = v:FindFirstChildWhichIsA("Humanoid") and v.PrimaryPart and v:FindFirstChild("Head") and (success and health > 0 or not success and true)
+                if not alivecheck then 
+                    RenderFunctions:RemoveEntity(pos)
+                    return
+                end
+                task.wait()
+                until not RenderFunctions
+            end)
+        end
+    end))
+end)
+
+
 task.spawn(function()
     local whitelistsuccess, response = pcall(function() return RenderFunctions:CreateWhitelistTable() end)
     RenderFunctions.whitelistSuccess = whitelistsuccess
     RenderFunctions.WhitelistLoaded = true
     if not whitelistsuccess or not response then 
-        if RenderDeveloper or RenderPrivate then 
-            errorNotification('Voidware4', 'Failed to create the whitelist table. | '..(response or 'Failed to Decode JSON'), 10) 
-        end
+        --errorNotification("Voidware", "Failed to create the whitelist table. | "..(response or "Failed to Decode JSON"), 10)
     end
-end)
-
-task.spawn(function()
-    repeat task.wait() until RenderStore
-    table.insert(RenderConnections, RenderStore.MessageReceived.Event:Connect(function(plr, text)
-        text = text:gsub('/w '..lplr.Name, '')
-        local args = text:split(' ')
-        local first, second = tostring(args[1]), tostring(args[2])
-        if first:sub(1, 6) == ';cmds' and plr == lplr and RenderFunctions:GetPlayerType(3) > 1 and RenderFunctions:GetPlayerType() ~= 'BETA' then 
-            task.wait(0.1)
-            for i,v in next, RenderFunctions.commands do 
-                if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then 
-                    textChatService.ChatInputBarConfiguration.TargetTextChannel:DisplaySystemMessage(i)
-                else 
-                    game:GetService('StarterGui'):SetCore('ChatMakeSystemMessage', {Text = i,  Color = Color3.fromRGB(255, 255, 255), Font = Enum.Font.SourceSansBold, FontSize = Enum.FontSize.Size24})
-                end
-            end
-        end
-        for i,v in next, RenderFunctions.hashTable do 
-            if text:find(i) and table.find(RenderFunctions.configUsers, plr) == nil then 
-                repeat task.wait() until RenderFunctions.WhitelistLoaded
-                print('Voidware4 - '..plr.DisplayName..' is using '..v..'!')
-                local allowed = (RenderFunctions:GetPlayerType(3) > 1 and RenderFunctions:GetPlayerType(3, plr) < RenderFunctions:GetPlayerType(3)) 
-                if not allowed then return end 
-                if GuiLibrary then 
-                    pcall(GuiLibrary.CreateNotification, 'Voidware4', plr.DisplayName..' is using '..v..'!', 100) 
-                end
-                if RenderFunctions:GetPlayerType(6, plr) then 
-                    RenderFunctions:CreatePlayerTag(plr, 'RENDER USER', 'B95CF4') 
-                end
-                table.insert(RenderFunctions.configUsers, plr)
-            end
-        end
-        if RenderFunctions:GetPlayerType(3, plr) < 1.5 or RenderFunctions:GetPlayerType(3, plr) <= RenderFunctions:GetPlayerType(3) then 
-            return 
-        end
-        for i, command in next, RenderFunctions.commands do 
-            if first:sub(1, #i + 1) == ';'..i and (second:lower() == RenderFunctions:GetPlayerType():lower() or lplr.Name:lower():find(second:lower()) or second:lower() == 'all') then 
-                pcall(command, args, plr)
-                break
-            end
-        end
-    end))
 end)
 
 

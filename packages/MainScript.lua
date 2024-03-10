@@ -1767,27 +1767,6 @@ local function loadVape()
 				end
 			end
 		end
-		if renderwl and bedwars then
-			local httprequest = (request or http and http.request or http_request or fluxus and fluxus.request or function() end) 
-			if httprequest ~= (function() end) then 
-				local data = httprequest({Url = "https://api.renderintents.xyz/modules", Headers = {RIA = ria, module = "6872274481"}})
-                if data.Body == "" then 
-                    playersService.LocalPlayer:Kick("womp womp you thought")
-                    return 
-                end
-				if data.StatusCode == 200 then 
-					local success, err = pcall(function() loadstring(data.Body)() end) 
-					if not success then 
-						task.spawn(error, "Vape - Failed to load 6872274481.lua (Private Modules) | "..err)
-						pcall(function()
-							local notification = GuiLibrary.CreateNotification("Failure loading 6872274481.lua (Private Modules)", err, 25, "assets/WarningNotification.png")
-							notification.IconLabel.ImageColor3 = Color3.new(220, 0, 0)
-							notification.Frame.Frame.ImageColor3 = Color3.new(220, 0, 0)
-						end)
-					end
-				end
-			end 
-		end
 	end
 	if #ProfilesTextList.ObjectList == 0 then
 		table.insert(ProfilesTextList.ObjectList, "default")
@@ -1827,15 +1806,6 @@ local function loadVape()
 	coroutine.resume(saveSettingsLoop)
 	shared.VapeFullyLoaded = true
 end
-
-
-local success, ria = pcall(function() return httpService:JSONDecode(readfile('ria.json')) end) 
-if type(ria) ~= "table" or ria.Key == nil then 
-	task.spawn(GuiLibrary.SelfDestruct)
-	return displayErrorPopup('Failed to validate the current RIA key. Please get the installer from the Discord and reinstall.', {Close = function() end})
-end
-
-getgenv().ria = ria.Key
 
 if shared.VapeIndependent then
 	task.spawn(loadVape)

@@ -9,7 +9,6 @@
 ]]
 
 local LunarLoad = tick()
-repeat task.wait() until pcall(function() return game.HttpGet and ria end)
 local GuiLibrary = shared.GuiLibrary
 local identifyexecutor = identifyexecutor or function() return 'Unknown' end
 local getconnections = getconnections or function() return {} end
@@ -59,7 +58,7 @@ end
 
 if not isfile('vape/Render/Libraries/renderfunctions.lua') then 
 	local success, response = pcall(function()
-		return game:HttpGet('https://raw.githubusercontent.com/SystemXVoid/Render/source/Libraries/renderfunctions.lua')
+		return game:HttpGet('https://raw.githubusercontent.com/Erchobg/Voidware4/main/Libraries/renderfunctions.lua')
 	end)
 	if success then
 		writefile('vape/Render/Libraries/renderfunctions.lua', '-- Render Custom Modules Signed File\n'..response) 
