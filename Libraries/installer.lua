@@ -1,9 +1,9 @@
-return (function(ria) 
+return (function(hi) 
 	local lplr = game:GetService('Players').LocalPlayer 
 	local tween = game:GetService('TweenService')
 	local httpservice = game:GetService('HttpService')
 	local gui = Instance.new('ScreenGui', lplr.PlayerGui)
-	local renderinstaller = gui 
+	local voidwareinstaller = gui 
 	local stepcount = 0
 	local steps = {}
 	local titles = {}
@@ -15,7 +15,7 @@ return (function(ria)
 	local yielding
 	local installprofile
 	
-	if getgenv and getgenv().renderinstaller then 
+	if getgenv and getgenv().voidwareinstaller then 
 		return 
 	end
 	
@@ -28,22 +28,6 @@ return (function(ria)
 		end
 		return newtable
 	end
-
-	local function decodebase64(data) -- from devforum cause some exploits don't have base_64_decode
-		local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-		data = string.gsub(data, '[^'..b..'=]', '')
-		return (data:gsub('.', function(x)
-			if (x == '=') then return '' end
-			local r,f='',(b:find(x)-1)
-			for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
-			return r;
-		end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
-			if (#x ~= 8) then return '' end
-			local c=0
-			for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
-			return string.char(c)
-		end))
-	  end
 	
 	if getgenv then 
 		getgenv().shared = (shared or betterclone(_G)) 
@@ -75,13 +59,13 @@ return (function(ria)
 	progressbarmain.Parent = mainframe
 	progressbarmain.BackgroundColor3 = Color3.fromRGB(30, 6, 130)
 	
-	local renderlogo = Instance.new('ImageButton', mainframe)
-	renderlogo.Name = 'RenderLogo'
-	renderlogo.Image = 'rbxassetid://15688086520'
-	renderlogo.Position = UDim2.new(0.405, 0, 0.154, 0)
-	renderlogo.Size = UDim2.new(0.208, 0, 0.38, 0)
-	renderlogo.BackgroundTransparency = 1
-	renderlogo.ZIndex = (mainframe.ZIndex + 1)
+	local voidwarelogo = Instance.new('ImageButton', mainframe)
+	voidwarelogo.Name = 'VoidwareLogo'
+	voidwarelogo.Image = 'rbxassetid://15688086520'
+	voidwarelogo.Position = UDim2.new(0.405, 0, 0.154, 0)
+	voidwarelogo.Size = UDim2.new(0.208, 0, 0.38, 0)
+	voidwarelogo.BackgroundTransparency = 1
+	voidwarelogo.ZIndex = (mainframe.ZIndex + 1)
 	
 	local progresstext = Instance.new('TextLabel', mainframe)
 	progresstext.Name = 'ProgressText'
@@ -140,7 +124,7 @@ return (function(ria)
 	
 	local guitopbartext = Instance.new('TextLabel', guitopbar)
 	guitopbartext.Name = 'InstallerText'
-	guitopbartext.Text = 'Render Installer'
+	guitopbartext.Text = 'Voidware Installer'
 	guitopbartext.FontFace = Font.new('rbxasset://fonts/families/GothamSSm.json', Enum.FontWeight.Bold)
 	guitopbartext.Position = UDim2.new(0.5, 0, 0.5, 0)
 	guitopbartext.TextSize = 16
@@ -148,12 +132,12 @@ return (function(ria)
 	guitopbartext.BackgroundTransparency = 1 
 	guitopbartext.ZIndex = 8e8
 	
-	local renderlogo2 = Instance.new('ImageLabel', guiframe)
-	renderlogo2.Name = 'RenderIcon'
-	renderlogo2.BackgroundTransparency = 1
-	renderlogo2.Size = UDim2.new(0, 117, 0, 125)
-	renderlogo2.Position = UDim2.new(0.032, 0, 0.225, 0)
-	renderlogo2.Image = 'rbxassetid://15688086520'
+	local voidwarelogo2 = Instance.new('ImageLabel', guiframe)
+	voidwarelogo2.Name = 'VoidwareIcon'
+	voidwarelogo2.BackgroundTransparency = 1
+	voidwarelogo2.Size = UDim2.new(0, 117, 0, 125)
+	voidwarelogo2.Position = UDim2.new(0.032, 0, 0.225, 0)
+	voidwarelogo2.Image = 'rbxassetid://15688086520'
 	
 	local guidivider = Instance.new('Frame', guiframe)
 	guidivider.Position = UDim2.new(0.321, 0, 0.132, 0)
@@ -225,11 +209,6 @@ return (function(ria)
 		mainframe.Visible = true 
 		guiframe.Visible = false 
 		activated = true
-		if httprequest == nil or writefile == nil then 
-			progresstext.TextColor3 = Color3.fromRGB(255, 0, 0)
-			progresstext.Text = ('Render isn\'t supported for "'..executor..'". Either httprequest or writefile returned nil.') 
-			return
-		end
 		installing = tick()
 		for step, func in next, steps do 
 			progresstext.Text = titles[step]
@@ -239,7 +218,7 @@ return (function(ria)
 				break 
 			end
 			if not success then 
-				task.spawn(error, 'Render Installer Step '..stepcount..' - '..err)
+				task.spawn(error, 'Voidware Installer Step '..stepcount..' - '..err)
 				local oldcolor = progresstext.TextColor3
 				tween:Create(progresstext, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(255, 0, 0)}):Play() 
 				task.delay(1, function()
@@ -267,7 +246,7 @@ return (function(ria)
 	
 	closebutton.MouseButton1Click:Connect(function()
 		if getgenv then 
-			getgenv().renderinstaller = nil 
+			getgenv().voidwareinstaller = nil 
 		end
 		gui:Destroy()
 	end)
@@ -275,7 +254,7 @@ return (function(ria)
 	actionbutton.MouseButton1Click:Connect(function()
 		if installed then 
 			if getgenv then 
-				getgenv().renderinstaller = nil 
+				getgenv().voidwareinstaller = nil 
 			end
 			gui:Destroy() 
 		else
@@ -297,10 +276,10 @@ return (function(ria)
 		until not gui.Parent
 	end)
 	
-	local profiles = createbutton({Name = 'No Settings', Default = isfile and not isfile('ria.json') or isfile == nil})
+	local profiles = createbutton({Name = 'Have profiles?'})
 	
 	if getgenv then 
-		getgenv().renderinstaller = gui 
+		getgenv().voidwareinstaller = gui 
 	end
 	
 	local function writevapefile(file, data)
@@ -321,23 +300,10 @@ return (function(ria)
 		stepcount = #steps
 	end
 
-	print(decodebase64(ria))
-	
-
-	registerStep('Decoding key..', function()
-		for i = 1, 100 do 
-			ria = decodebase64(ria)
-			if ria:find('RIA-') then  
-				break 
-			end
-		end
-		writefile('ria.json', httpservice:JSONEncode({Key = ria}))
-	end)
-
 	local corescripts = {'GuiLibrary.lua', 'MainScript.lua', 'Universal.lua', 'NewMainScript.lua'} 
 	for i,v in next, corescripts do 
 		registerStep('Downloading vape/'..v, function()
-			local res = game:HttpGet('https://raw.githubusercontent.com/SystemXVoid/Render/source/packages/'..v)
+			local res = game:HttpGet('https://raw.githubusercontent.com/Erchobg/Voidware4/main/packages/'..v)
 			if res ~= '404: Not Found' then 
 				writevapefile(v, res) 
 			end
@@ -346,7 +312,7 @@ return (function(ria)
 
 	for i,v in next, ({'6872274481.lua', '6872265039.lua'}) do 
 		registerStep('Downloading vape/CustomModules/'..v, function()
-			local res = game:HttpGet('https://raw.githubusercontent.com/SystemXVoid/Render/source/packages/'..v)
+			local res = game:HttpGet('https://raw.githubusercontent.com/Erchobg/Voidware4/main/packages/'..v)
 			if res ~= '404: Not Found' then 
 				writevapefile('CustomModules/'..v, res) 
 			end
@@ -357,7 +323,7 @@ return (function(ria)
 	local profilesfetched
 
 	task.spawn(function()
-		local res = game:HttpGet('https://api.github.com/repos/SystemXVoid/Render/contents/Libraries/Settings')
+		local res = game:HttpGet('https://api.github.com/repos/Erchobg/Voidware4/contents/Libraries/Settings')
 		if res ~= '404: Not Found' then 
 			for i,v in next, httpservice:JSONDecode(res) do 
 				if type(v) == 'table' and v.name then 
@@ -379,7 +345,7 @@ return (function(ria)
 			if not installprofile then 
 				return 
 			end
-			local res = game:HttpGet('https://raw.githubusercontent.com/SystemXVoid/Render/source/Libraries/Settings/'..v)
+			local res = game:HttpGet('https://raw.githubusercontent.com/Erchobg/Voidware4/main/Libraries/Settings/'..v)
 			if res ~= '404: Not Found' then 
 				writevapefile('Profiles/'..v, res) 
 			end
