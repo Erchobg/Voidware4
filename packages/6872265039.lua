@@ -1,14 +1,3 @@
--- Render Custom Vape Signed File
---[[
-
-    Render Intents | Bedwars lobby
-    The #1 vape mod you'll ever see.
-
-    Version: 1.5.1
-    discord.gg/render
-
-]]
-
 local GuiLibrary = shared.GuiLibrary
 local players = game:GetService('Players')
 local textservice = game:GetService('TextService')

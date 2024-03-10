@@ -1,13 +1,3 @@
---[[
-
-    Render Intents | Universal
-    The #1 vape mod you'll ever see.
-
-    Version: 1.7.1
-    discord.gg/render
-	
-]]
-
 local LunarLoad = tick()
 local GuiLibrary = shared.GuiLibrary
 local identifyexecutor = identifyexecutor or function() return 'Unknown' end

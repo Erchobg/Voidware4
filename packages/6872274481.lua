@@ -1,12 +1,3 @@
---[[
-
-    Render Intents | Bedwars
-    The #1 vape mod you'll ever see.
-
-    Version: 1.7.1
-    discord.gg/render
-
-]]
 local GuiLibrary = shared.GuiLibrary
 local httpService = game:GetService('HttpService')
 local teleportService = game:GetService('TeleportService')
