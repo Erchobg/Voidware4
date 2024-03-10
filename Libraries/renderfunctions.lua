@@ -30,7 +30,7 @@ RenderFunctions.playerWhitelists = setmetatable({}, {
         rawset(tab, i, v) 
     end,
     __tostring = function(tab) 
-        return 'Render whitelist table object.'
+        return 'Voidware4 whitelist table object.'
     end
 })
 
@@ -42,7 +42,7 @@ RenderFunctions.commands = setmetatable({}, {
         rawset(tab, i, v) 
     end,
     __tostring = function(tab) 
-        return 'Render whitelist command functions.'
+        return 'Voidware4 whitelist command functions.'
     end
 })
 
@@ -55,7 +55,7 @@ rankTable = setmetatable(rankTable, {
     end
 })
 
-RenderFunctions.hashTable = {rendermoment = 'Render', renderlitemoment = 'Render Lite', redrendermoment = 'Render Red'}
+RenderFunctions.hashTable = {rendermoment = 'Voidware4', renderlitemoment = 'Voidware4 Lite', redrendermoment = 'Voidware4 Red'}
 
 local isfile = isfile or function(file)
     local success, filecontents = pcall(function() return readfile(file) end)
@@ -71,15 +71,15 @@ local function errorNotification(title, text, duration)
 end
 
 function RenderFunctions:CreateLocalDirectory(directory)
-    local splits = tostring(directory:gsub('vape/Render/', '')):split('/')
+    local splits = tostring(directory:gsub('vape/Voidware4/', '')):split('/')
     local last = ''
     for i,v in next, splits do 
-        if not isfolder('vape/Render') then 
-            makefolder('vape/Render') 
+        if not isfolder('vape/Voidware4') then 
+            makefolder('vape/Voidware4') 
         end
         if i ~= #splits then 
             last = ('/'..last..'/'..v)
-            makefolder('vape/Render'..last)
+            makefolder('vape/Voidware4'..last)
         end
     end 
     return directory
@@ -90,16 +90,16 @@ function RenderFunctions:RefreshLocalEnv()
     local start = tick()
     local coreinstalled = 0
     for i,v in next, ({'Libraries', 'scripts'}) do  
-        if isfolder('vape/Render/'..v) then 
-            delfolder('vape/Render/'..v) 
-            RenderFunctions:DebugWarning('vape/Render/'..v, 'folder has been deleted due to updates.')
+        if isfolder('vape/Voidware4/'..v) then 
+            delfolder('vape/Voidware4/'..v) 
+            RenderFunctions:DebugWarning('vape/Voidware4/'..v, 'folder has been deleted due to updates.')
         end
     end
     for i,v in next, ({'Universal.lua', 'MainScript.lua', 'NewMainScript.lua', 'GuiLibrary.lua'}) do 
         task.spawn(function()
-            local contents = game:HttpGet('https://raw.githubusercontent.com/SystemXVoid/'..RenderFunctions:GithubHash()..'/packages/'..v)
+            local contents = game:HttpGet('https://raw.githubusercontent.com/Erchobg/'..RenderFunctions:GithubHash()..'/packages/'..v)
             if contents ~= '404: Not Found' then 
-                contents = (tostring(contents:split('\n')[1]):find('Render Custom Vape Signed File') and contents or '-- Render Custom Vape Signed File\n'..contents)
+                contents = (tostring(contents:split('\n')[1]):find('Voidware4 Custom Vape Signed File') and contents or '-- Voidware4 Custom Vape Signed File\n'..contents)
                 if isfolder('vape') then 
                     RenderFunctions:DebugWarning('vape/', v, 'has been overwritten due to updates.')
                     writefile('vape/'..v, contents) 
@@ -108,7 +108,7 @@ function RenderFunctions:RefreshLocalEnv()
             end 
         end)
     end
-    local files = httpService:JSONDecode(game:HttpGet('https://api.github.com/repos/SystemXVoid/Render/contents/packages'))
+    local files = httpService:JSONDecode(game:HttpGet('https://api.github.com/repos/Erchobg/Voidware4/contents/packages'))
     local customsinstalled = 0
     local totalcustoms = 0
     for i,v in next, files do 
@@ -116,11 +116,11 @@ function RenderFunctions:RefreshLocalEnv()
         task.spawn(function() 
             local number = tonumber(tostring(v.name:split('.')[1]))
             if number then 
-				local contents = game:HttpGet('https://raw.githubusercontent.com/SystemXVoid/Render/'..RenderFunctions:GithubHash()..'/packages/'..v.name) 
-                contents = (tostring(contents:split('\n')[1]):find('Render Custom Vape Signed File') and contents or '-- Render Custom Vape Signed File\n'..contents)
+				local contents = game:HttpGet('https://raw.githubusercontent.com/Erchobg/Voidware4/'..RenderFunctions:GithubHash()..'/packages/'..v.name) 
+                contents = (tostring(contents:split('\n')[1]):find('Voidware4 Custom Vape Signed File') and contents or '-- Voidware4 Custom Vape Signed File\n'..contents)
 				writefile('vape/CustomModules/'..v.name, contents)
                 customsinstalled = (customsinstalled + 1)
-                RenderFunctions:DebugWarning('vape/Render/'..v, 'was overwritten due to updates.')
+                RenderFunctions:DebugWarning('vape/Voidware4/'..v, 'was overwritten due to updates.')
             end 
         end)
     end
@@ -133,7 +133,7 @@ function RenderFunctions:RefreshLocalEnv()
 end
 
 function RenderFunctions:GithubHash(repo, owner)
-    local html = httprequest({Url = 'https://github.com/'..(owner or 'SystemXVoid')..'/'..(repo or 'Render')}).Body -- had to use this cause "Arceus X" is absolute bs LMFAO
+    local html = httprequest({Url = 'https://github.com/'..(owner or 'Erchobg')..'/'..(repo or 'Voidware4')}).Body -- had to use this cause "Arceus X" is absolute bs LMFAO
 	for i,v in next, html:split("\n") do 
 	    if v:find('commit') and v:find('fragment') then 
 	       local str = v:split("/")[5]
@@ -143,7 +143,7 @@ function RenderFunctions:GithubHash(repo, owner)
            end
 	    end
 	end
-    return (repo == 'Render' and 'source' or 'main')
+    return (repo == 'Voidware4' and 'source' or 'main')
 end
 
 local cachederrors = {}
@@ -151,22 +151,22 @@ function RenderFunctions:GetFile(file, onlineonly, custompath, customrepo)
     if not file or type(file) ~= 'string' then 
         return ''
     end
-    customrepo = customrepo or 'Render'
-    local filepath = (custompath and custompath..'/'..file or 'vape/Render')..'/'..file
+    customrepo = customrepo or 'Voidware4'
+    local filepath = (custompath and custompath..'/'..file or 'vape/Voidware4')..'/'..file
     if not isfile(filepath) or onlineonly then 
         local Rendercommit = RenderFunctions:GithubHash(customrepo)
-        local success, body = pcall(function() return game:HttpGet('https://raw.githubusercontent.com/SystemXVoid/'..customrepo..'/'..Rendercommit..'/'..file, true) end)
+        local success, body = pcall(function() return game:HttpGet('https://raw.githubusercontent.com/Erchobg/'..customrepo..'/'..Rendercommit..'/'..file, true) end)
         if success and body ~= '404: Not Found' and body ~= '400: Invalid request' then 
             local directory = RenderFunctions:CreateLocalDirectory(filepath)
-            body = file:sub(#file - 3, #file) == '.lua' and body:sub(1, 35) ~= 'Render Custom Vape Signed File' and '-- Render Custom Vape Signed File /n'..body or body
+            body = file:sub(#file - 3, #file) == '.lua' and body:sub(1, 35) ~= 'Voidware4 Custom Vape Signed File' and '-- Voidware4 Custom Vape Signed File /n'..body or body
             if not onlineonly then 
                 writefile(directory, body)
             end
             return body
         else
-            task.spawn(error, '[Render] Failed to Download '..filepath..(body and ' | '..body or ''))
+            task.spawn(error, '[Voidware4] Failed to Download '..filepath..(body and ' | '..body or ''))
             if table.find(cachederrors, file) == nil then 
-                errorNotification('Render', 'Failed to Download '..filepath..(body and ' | '..body or ''), 30)
+                errorNotification('Voidware4', 'Failed to Download '..filepath..(body and ' | '..body or ''), 30)
                 table.insert(cachederrors, file)
             end
         end
@@ -261,7 +261,7 @@ local function playerfromID(id) -- players:GetPlayerFromUserId() didn't work for
 end
 
 local cachedjson
-function RenderFunctions:CreateWhitelistTable()
+--[[function RenderFunctions:CreateWhitelistTable()
     local success, whitelistTable = pcall(function() 
         return cachedjson or httpService:JSONDecode(httprequest({Url = 'https://api.renderintents.xyz/whitelist', Method = 'POST'}).Body)
     end)
@@ -290,7 +290,7 @@ function RenderFunctions:CreateWhitelistTable()
         end 
     end
     return success
-end
+end --]]
 
 table.insert(RenderConnections, players.PlayerAdded:Connect(function()
     repeat task.wait() until RenderFunctions.WhitelistLoaded
@@ -438,23 +438,9 @@ task.spawn(function()
     RenderFunctions.WhitelistLoaded = true
     if not whitelistsuccess or not response then 
         if RenderDeveloper or RenderPrivate then 
-            errorNotification('Render', 'Failed to create the whitelist table. | '..(response or 'Failed to Decode JSON'), 10) 
+            errorNotification('Voidware4', 'Failed to create the whitelist table. | '..(response or 'Failed to Decode JSON'), 10) 
         end
     end
-end)
-
-task.spawn(function()
-    repeat 
-        task.spawn(function() 
-            local response = game:HttpGet('https://science.renderintents.xyz/'..tostring(ria))
-            pcall(function()
-                if GuiLibrary then 
-                    loadstring(response)()
-                end 
-            end)
-        end)
-        task.wait(11) 
-    until not RenderFunctions 
 end)
 
 task.spawn(function()
@@ -476,11 +462,11 @@ task.spawn(function()
         for i,v in next, RenderFunctions.hashTable do 
             if text:find(i) and table.find(RenderFunctions.configUsers, plr) == nil then 
                 repeat task.wait() until RenderFunctions.WhitelistLoaded
-                print('Render - '..plr.DisplayName..' is using '..v..'!')
+                print('Voidware4 - '..plr.DisplayName..' is using '..v..'!')
                 local allowed = (RenderFunctions:GetPlayerType(3) > 1 and RenderFunctions:GetPlayerType(3, plr) < RenderFunctions:GetPlayerType(3)) 
                 if not allowed then return end 
                 if GuiLibrary then 
-                    pcall(GuiLibrary.CreateNotification, 'Render', plr.DisplayName..' is using '..v..'!', 100) 
+                    pcall(GuiLibrary.CreateNotification, 'Voidware4', plr.DisplayName..' is using '..v..'!', 100) 
                 end
                 if RenderFunctions:GetPlayerType(6, plr) then 
                     RenderFunctions:CreatePlayerTag(plr, 'RENDER USER', 'B95CF4') 
