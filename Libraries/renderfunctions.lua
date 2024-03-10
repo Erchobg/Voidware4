@@ -175,84 +175,6 @@ function RenderFunctions:GetFile(file, onlineonly, custompath, customrepo)
     return isfile(filepath) and readfile(filepath) or task.wait(9e9)
 end
 
-local announcements = {}
-function RenderFunctions:Announcement(tab)
-	tab = tab or {}
-	tab.Text = tab.Text or ''
-	tab.Duration = tab.Duration or 20
-	for i,v in next, announcements do 
-        pcall(function() v:Destroy() end) 
-    end
-	table.clear(announcements)
-	local announcemainframe = Instance.new('Frame')
-	announcemainframe.Position = UDim2.new(0.2, 0, -5, 0.1)
-	announcemainframe.Size = UDim2.new(0, 1227, 0, 62)
-	announcemainframe.Parent = (GuiLibrary and GuiLibrary.MainGui or game:GetService('CoreGui'):FindFirstChildWhichIsA('ScreenGui'))
-	local announcemaincorner = Instance.new('UICorner')
-	announcemaincorner.CornerRadius = UDim.new(0, 20)
-	announcemaincorner.Parent = announcemainframe
-	local announceuigradient = Instance.new('UIGradient')
-	announceuigradient.Parent = announcemainframe
-	announceuigradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(234, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromRGB(153, 0, 0))})
-	announceuigradient.Enabled = true
-	local announceiconframe = Instance.new('Frame')
-	announceiconframe.BackgroundColor3 = Color3.fromRGB(106, 0, 0)
-	announceiconframe.BorderColor3 = Color3.fromRGB(85, 0, 0)
-	announceiconframe.Position = UDim2.new(0.007, 0, 0.097, 0)
-	announceiconframe.Size = UDim2.new(0, 58, 0, 50)
-	announceiconframe.Parent = announcemainframe
-	local annouceiconcorner = Instance.new('UICorner')
-	annouceiconcorner.CornerRadius = UDim.new(0, 20)
-	annouceiconcorner.Parent = announceiconframe
-	local announceRendericon = Instance.new('ImageButton')
-	announceRendericon.Parent = announceiconframe
-	announceRendericon.Image = 'rbxassetid://13391474085'
-	announceRendericon.Position = UDim2.new(-0, 0, 0, 0)
-	announceRendericon.Size = UDim2.new(0, 59, 0, 50)
-	announceRendericon.BackgroundTransparency = 1
-	local announcetextfont = Font.new('rbxasset://fonts/families/Ubuntu.json')
-	announcetextfont.Weight = Enum.FontWeight.Bold
-	local announcemaintext = Instance.new('TextButton')
-	announcemaintext.Text = tab.Text
-	announcemaintext.FontFace = announcetextfont
-	announcemaintext.TextXAlignment = Enum.TextXAlignment.Left
-	announcemaintext.BackgroundTransparency = 1
-	announcemaintext.TextSize = 30
-	announcemaintext.AutoButtonColor = false
-	announcemaintext.Position = UDim2.new(0.063, 0, 0.097, 0)
-	announcemaintext.Size = UDim2.new(0, 1140, 0, 50)
-	announcemaintext.RichText = true
-	announcemaintext.TextColor3 = Color3.fromRGB(255, 255, 255)
-	announcemaintext.Parent = announcemainframe
-	tweenService:Create(announcemainframe, TweenInfo.new(1), {Position = UDim2.new(0.2, 0, 0.042, 0.1)}):Play()
-	local sound = Instance.new('Sound')
-	sound.PlayOnRemove = true
-	sound.SoundId = 'rbxassetid://6732495464'
-	sound.Parent = announcemainframe
-	sound:Destroy()
-	local function announcementdestroy()
-		local sound = Instance.new('Sound')
-		sound.PlayOnRemove = true
-		sound.SoundId = 'rbxassetid://6732690176'
-		sound.Parent = announcemainframe
-		sound:Destroy()
-		announcemainframe:Destroy()
-	end
-	announcemaintext.MouseButton1Click:Connect(announcementdestroy)
-	announceRendericon.MouseButton1Click:Connect(announcementdestroy)
-	task.delay(tab.Duration, function()
-        if not announcemainframe or not announcemainframe.Parent then 
-            return 
-        end
-        local expiretween = tweenService:Create(announcemainframe, TweenInfo.new(0.20, Enum.EasingStyle.Quad), {Transparency = 1})
-        expiretween:Play()
-        expiretween.Completed:Wait() 
-        announcemainframe:Destroy()
-    end)
-	table.insert(announcements, announcemainframe)
-	return announcemainframe
-end
-
 local function playerfromID(id) -- players:GetPlayerFromUserId() didn't work for some reason :bruh:
     for i,v in next, players:GetPlayers() do 
         if v.UserId == tonumber(id) then 
@@ -307,36 +229,6 @@ function RenderFunctions:CreateWhitelistTable()
     end
     return success
 end
---[[function RenderFunctions:CreateWhitelistTable()
-    local success, whitelistTable = pcall(function() 
-        return cachedjson or httpService:JSONDecode(httprequest({Url = 'https://api.renderintents.xyz/whitelist', Method = 'POST'}).Body)
-    end)
-    if success and type(whitelistTable) == 'table' then 
-        cachedjson = whitelistTable
-        for i,v in next, whitelistTable do 
-            if type(v.Accounts) == 'table' then 
-                for i2, v2 in next, v.Accounts do 
-                    local plr = playerfromID(v2)
-                    if plr then 
-                        rawset(RenderFunctions.playerWhitelists, v2, v)
-                        RenderFunctions.playerWhitelists[v2].Priority = (rankTable[v.Rank or 'STANDARD'] or 1)
-                        RenderFunctions.playerWhitelists[v2].Priority = (rankTable[v.Rank or 'STANDARD'] or 1)
-                        if not v.TagHidden then 
-                            RenderFunctions:CreatePlayerTag(plr, v.TagText, v.TagColor)
-                        end
-                    end
-                end
-            end 
-        end
-    end
-    local selftab = (RenderFunctions.playerWhitelists[lplr] or {Priority = 1})
-    for i,v in next, RenderFunctions.playerWhitelists do 
-        if selftab.Priority >= v.Priority then 
-            v.Attackable = true
-        end 
-    end
-    return success
-end --]]
 
 table.insert(RenderConnections, players.PlayerAdded:Connect(function()
     repeat task.wait() until RenderFunctions.WhitelistLoaded
@@ -416,12 +308,6 @@ function RenderFunctions:SelfDestruct()
         pcall(function() v:disconnect() end)
     end
 end
-
-task.spawn(function()
-	for i,v in next, ({'Hex2Color3', 'encodeLib'}) do 
-		--task.spawn(function() RenderLibraries[v] = loadstring(RenderFunctions:GetFile('Libraries/'..v..'.lua'))() end)
-	end
-end)
 
 function RenderFunctions:RunFromLibrary(tablename, func, ...)
 	if RenderLibraries[tablename] == nil then 
