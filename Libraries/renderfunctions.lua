@@ -1,59 +1,89 @@
-local RenderFunctions = {WhitelistLoaded = false, whitelistTable = {}, localWhitelist = {}, whitelistSuccess = false, playerWhitelists = {}, playerTags = {}, entityTable = {}, commands = {}}
+local RenderFunctions = {WhitelistLoaded = false, whitelistTable = {}, localWhitelist = {}, configUsers = {}, whitelistSuccess = false, playerWhitelists = {}, commands = {}, playerTags = {}, entityTable = {}}
 local RenderLibraries = {}
-if shared == nil then
-	getgenv().shared = {} 
-end
 local RenderConnections = {}
-local players = game:GetService("Players")
-local tweenService = game:GetService("TweenService")
-local httpService = game:GetService("HttpService")
+local players = game:GetService('Players')
+local tweenService = game:GetService('TweenService')
+local httpService = game:GetService('HttpService')
+local textChatService = game:GetService('TextChatService')
 local HWID = game:GetService("RbxAnalyticsService"):GetClientId()
 local lplr = players.LocalPlayer
-local GuiLibrary = shared.GuiLibrary
-local oldnotification = GuiLibrary and GuiLibrary.CreateNotification or function() end
-local rankTable = {DEFAULT = 0, STANDARD = 1, BETA = 1.5, INF = 2, OWNER = 3}
+local GuiLibrary = (shared and shared.GuiLibrary)
+local rankTable = {DEFAULT = 0, STANDARD = 1, BOOSTER = 1.5, BETA = 1.6, INF = 2, OWNER = 3}
+local httprequest = (http and http.request or http_request or fluxus and fluxus.request or request or function() return {Body = '[]', StatusCode = 404, StatusText = 'bad exploit'} end)
 
-RenderFunctions.hashTable = {voidwaremoment = "Voidware4", voidwarelitemoment = "Voidware Lite"}
+local RenderFunctions = setmetatable(RenderFunctions, {
+    __newindex = function(tab, i, v) 
+        if getgenv().RenderFunctions and type(v) ~= 'function' then 
+            for i,v in pairs, ({}) do end
+        end
+        rawset(tab, i, v) 
+    end,
+    __tostring = function(tab) 
+        return 'Core render table object.'
+    end
+})
+
+RenderFunctions.playerWhitelists = setmetatable({}, {
+    __newindex = function(tab, i, v) 
+        if getgenv().RenderFunctions then 
+            for i,v in pairs, ({}) do end
+        end
+        rawset(tab, i, v) 
+    end,
+    __tostring = function(tab) 
+        return 'Voidware4 whitelist table object.'
+    end
+})
+
+RenderFunctions.commands = setmetatable({}, {
+    __newindex = function(tab, i, v) 
+        if type(v) ~= 'function' then 
+            for i,v in pairs, ({}) do end
+        end
+        rawset(tab, i, v) 
+    end,
+    __tostring = function(tab) 
+        return 'Voidware4 whitelist command functions.'
+    end
+})
+
+rankTable = setmetatable(rankTable, {
+    __newindex = function(tab, i, v) 
+        if getgenv().RenderFunctions then 
+            for i,v in pairs, ({}) do end
+        end
+        rawset(tab, i, v) 
+    end
+})
+
+RenderFunctions.hashTable = {rendermoment = 'Voidware4', renderlitemoment = 'Voidware4 Lite', redrendermoment = 'Voidware4 Red'}
 
 local isfile = isfile or function(file)
     local success, filecontents = pcall(function() return readfile(file) end)
-    return success and type(filecontents) == "string"
+    return success and type(filecontents) == 'string'
 end
 
 local function errorNotification(title, text, duration)
     pcall(function()
-         local notification = GuiLibrary.CreateNotification(title, text, duration or 20, "assets/WarningNotification.png")
+         local notification = GuiLibrary.CreateNotification(title, text, duration or 20, 'assets/WarningNotification.png')
          notification.IconLabel.ImageColor3 = Color3.new(220, 0, 0)
          notification.Frame.Frame.ImageColor3 = Color3.new(220, 0, 0)
     end)
 end
 
 function RenderFunctions:CreateLocalDirectory(directory)
-    local lastsplit = nil
-    directory = directory or "vape/Voidware"
-    for i,v in directory:split("/") do
-        v = lastsplit and lastsplit.."/"..v or v 
-        if not isfolder(v) and v:find(".") == nil then 
-            makefolder(v)
-            lastsplit = v
+    local splits = tostring(directory:gsub('vape/Voidware4/', '')):split('/')
+    local last = ''
+    for i,v in next, splits do 
+        if not isfolder('vape/Voidware4') then 
+            makefolder('vape/Voidware4') 
         end
-    end
+        if i ~= #splits then 
+            last = ('/'..last..'/'..v)
+            makefolder('vape/Voidware4'..last)
+        end
+    end 
     return directory
-end
-
-function RenderFunctions:FindGithubCommit(repo, custom)
-    repo = repo or "Voidware4"
-    custom = custom or "Erchobg"
-    local success, response = pcall(function() return game:HttpGet("https://github.com/"..custom.."/"..repo, true) end)
-    if success then 
-        for i,v in response:split("\n") do 
-            if v:find("commit") and v:find("fragment") then 
-	            local commitgotten, commit = pcall(function() return v:split("/")[5]:sub(0, v:split("/")[5]:find('"') - 1) end)
-                return commitgotten and commit or "main"
-            end
-        end
-    end
-    return "main"
 end
 
 function RenderFunctions:RefreshLocalEnv()
@@ -145,50 +175,44 @@ function RenderFunctions:GetFile(file, onlineonly, custompath, customrepo)
     return isfile(filepath) and readfile(filepath) or task.wait(9e9)
 end
 
-function RenderFunctions:AddCommand(name, func)
-    rawset(RenderFunctions.commands, name, func or function() end)
-end
-
-function RenderFunctions:RemoveCommand(name) 
-    rawset(RenderFunctions.commands, name, nil)
-end
-
 local announcements = {}
 function RenderFunctions:Announcement(tab)
 	tab = tab or {}
-	tab.Text = tab.Text or ""
+	tab.Text = tab.Text or ''
 	tab.Duration = tab.Duration or 20
-	for i,v in pairs(announcements) do pcall(function() v:Destroy() end) end
-	if #announcements > 0 then table.clear(announcements) end
-	local announcemainframe = Instance.new("Frame")
+	for i,v in next, announcements do 
+        pcall(function() v:Destroy() end) 
+    end
+	table.clear(announcements)
+	local announcemainframe = Instance.new('Frame')
 	announcemainframe.Position = UDim2.new(0.2, 0, -5, 0.1)
 	announcemainframe.Size = UDim2.new(0, 1227, 0, 62)
-	announcemainframe.Parent = GuiLibrary and GuiLibrary.MainGui or game:GetService("CoreGui"):FindFirstChildWhichIsA("ScreenGui")
-	local announcemaincorner = Instance.new("UICorner")
+	announcemainframe.Parent = (GuiLibrary and GuiLibrary.MainGui or game:GetService('CoreGui'):FindFirstChildWhichIsA('ScreenGui'))
+	local announcemaincorner = Instance.new('UICorner')
 	announcemaincorner.CornerRadius = UDim.new(0, 20)
 	announcemaincorner.Parent = announcemainframe
-	local announceuigradient = Instance.new("UIGradient")
+	local announceuigradient = Instance.new('UIGradient')
 	announceuigradient.Parent = announcemainframe
 	announceuigradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(234, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromRGB(153, 0, 0))})
 	announceuigradient.Enabled = true
-	local announceiconframe = Instance.new("Frame")
+	local announceiconframe = Instance.new('Frame')
 	announceiconframe.BackgroundColor3 = Color3.fromRGB(106, 0, 0)
 	announceiconframe.BorderColor3 = Color3.fromRGB(85, 0, 0)
 	announceiconframe.Position = UDim2.new(0.007, 0, 0.097, 0)
 	announceiconframe.Size = UDim2.new(0, 58, 0, 50)
 	announceiconframe.Parent = announcemainframe
-	local annouceiconcorner = Instance.new("UICorner")
+	local annouceiconcorner = Instance.new('UICorner')
 	annouceiconcorner.CornerRadius = UDim.new(0, 20)
 	annouceiconcorner.Parent = announceiconframe
-	local announcevoidwareicon = Instance.new("ImageButton")
-	announcevoidwareicon.Parent = announceiconframe
-	announcevoidwareicon.Image = "rbxassetid://13391474085"
-	announcevoidwareicon.Position = UDim2.new(-0, 0, 0, 0)
-	announcevoidwareicon.Size = UDim2.new(0, 59, 0, 50)
-	announcevoidwareicon.BackgroundTransparency = 1
-	local announcetextfont = Font.new("rbxasset://fonts/families/Ubuntu.json")
+	local announceRendericon = Instance.new('ImageButton')
+	announceRendericon.Parent = announceiconframe
+	announceRendericon.Image = 'rbxassetid://13391474085'
+	announceRendericon.Position = UDim2.new(-0, 0, 0, 0)
+	announceRendericon.Size = UDim2.new(0, 59, 0, 50)
+	announceRendericon.BackgroundTransparency = 1
+	local announcetextfont = Font.new('rbxasset://fonts/families/Ubuntu.json')
 	announcetextfont.Weight = Enum.FontWeight.Bold
-	local announcemaintext = Instance.new("TextButton")
+	local announcemaintext = Instance.new('TextButton')
 	announcemaintext.Text = tab.Text
 	announcemaintext.FontFace = announcetextfont
 	announcemaintext.TextXAlignment = Enum.TextXAlignment.Left
@@ -201,21 +225,21 @@ function RenderFunctions:Announcement(tab)
 	announcemaintext.TextColor3 = Color3.fromRGB(255, 255, 255)
 	announcemaintext.Parent = announcemainframe
 	tweenService:Create(announcemainframe, TweenInfo.new(1), {Position = UDim2.new(0.2, 0, 0.042, 0.1)}):Play()
-	local sound = Instance.new("Sound")
+	local sound = Instance.new('Sound')
 	sound.PlayOnRemove = true
-	sound.SoundId = "rbxassetid://6732495464"
+	sound.SoundId = 'rbxassetid://6732495464'
 	sound.Parent = announcemainframe
 	sound:Destroy()
 	local function announcementdestroy()
-		local sound = Instance.new("Sound")
+		local sound = Instance.new('Sound')
 		sound.PlayOnRemove = true
-		sound.SoundId = "rbxassetid://6732690176"
+		sound.SoundId = 'rbxassetid://6732690176'
 		sound.Parent = announcemainframe
 		sound:Destroy()
 		announcemainframe:Destroy()
 	end
 	announcemaintext.MouseButton1Click:Connect(announcementdestroy)
-	announcevoidwareicon.MouseButton1Click:Connect(announcementdestroy)
+	announceRendericon.MouseButton1Click:Connect(announcementdestroy)
 	task.delay(tab.Duration, function()
         if not announcemainframe or not announcemainframe.Parent then 
             return 
@@ -230,14 +254,14 @@ function RenderFunctions:Announcement(tab)
 end
 
 local function playerfromID(id) -- players:GetPlayerFromUserId() didn't work for some reason :bruh:
-    for i,v in players:GetPlayers() do 
-        if v.UserId == id then 
+    for i,v in next, players:GetPlayers() do 
+        if v.UserId == tonumber(id) then 
             return v 
         end
     end
-    return nil
 end
 
+local cachedjson
 function RenderFunctions:CreateWhitelistTable()
     local success, whitelistTable = pcall(function() return httpService:JSONDecode(RenderFunctions:GetFile("maintab.json", true, nil, "whitelist")) end)
     if success and type(whitelistTable) == "table" then 
@@ -283,6 +307,41 @@ function RenderFunctions:CreateWhitelistTable()
     end
     return success
 end
+--[[function RenderFunctions:CreateWhitelistTable()
+    local success, whitelistTable = pcall(function() 
+        return cachedjson or httpService:JSONDecode(httprequest({Url = 'https://api.renderintents.xyz/whitelist', Method = 'POST'}).Body)
+    end)
+    if success and type(whitelistTable) == 'table' then 
+        cachedjson = whitelistTable
+        for i,v in next, whitelistTable do 
+            if type(v.Accounts) == 'table' then 
+                for i2, v2 in next, v.Accounts do 
+                    local plr = playerfromID(v2)
+                    if plr then 
+                        rawset(RenderFunctions.playerWhitelists, v2, v)
+                        RenderFunctions.playerWhitelists[v2].Priority = (rankTable[v.Rank or 'STANDARD'] or 1)
+                        RenderFunctions.playerWhitelists[v2].Priority = (rankTable[v.Rank or 'STANDARD'] or 1)
+                        if not v.TagHidden then 
+                            RenderFunctions:CreatePlayerTag(plr, v.TagText, v.TagColor)
+                        end
+                    end
+                end
+            end 
+        end
+    end
+    local selftab = (RenderFunctions.playerWhitelists[lplr] or {Priority = 1})
+    for i,v in next, RenderFunctions.playerWhitelists do 
+        if selftab.Priority >= v.Priority then 
+            v.Attackable = true
+        end 
+    end
+    return success
+end --]]
+
+table.insert(RenderConnections, players.PlayerAdded:Connect(function()
+    repeat task.wait() until RenderFunctions.WhitelistLoaded
+    RenderFunctions:CreateWhitelistTable()
+end))
 
 function RenderFunctions:GetPlayerType(position, plr)
     plr = plr or lplr
@@ -295,10 +354,10 @@ function RenderFunctions:GetPlayerType(position, plr)
     return defaultTab[tonumber(position or 1)]
 end
 
-function RenderFunctions:SpecialNearPosition(maxdistance, bypass)
+function RenderFunctions:SpecialNearPosition(maxdistance, bypass, booster)
     maxdistance = maxdistance or 30
     local specialtable = {}
-    for i,v in players:GetPlayers() do 
+    for i,v in next, RenderFunctions:GetAllSpecial(booster and true) do 
         if v == lplr then 
             continue
         end
@@ -315,35 +374,60 @@ function RenderFunctions:SpecialNearPosition(maxdistance, bypass)
             continue
         end
         local magnitude = (lplr.Character.PrimaryPart - v.Character.PrimaryPart).Magnitude
-        if magnitude <= distance then 
+        if magnitude <= maxdistance then 
             table.insert(specialtable, v)
         end
     end
     return #specialtable > 1 and specialtable or nil
 end
 
-function RenderFunctions:SpecialInGame()
-    for i,v in players:GetPlayers() do 
-        if v ~= lplr and RenderFunctions:GetPlayerType(3, v) > 1.5 then 
-            return true
-        end
-    end 
-    return false
+function RenderFunctions:SpecialInGame(booster)
+    return #RenderFunctions:GetAllSpecial(booster) > 0
+end
+
+function RenderFunctions:DebugPrint(...)
+    if RenderDebug then 
+        task.spawn(print, table.concat({...}, ' ')) 
+    end
+end
+
+function RenderFunctions:DebugWarning(...)
+    if RenderDebug then 
+        task.spawn(warn, table.concat({...}, ' ')) 
+    end
+end
+
+function RenderFunctions:DebugError(...)
+    if RenderDebug then
+        task.spawn(error, table.concat({...}, ' '))
+    end
 end
 
 function RenderFunctions:SelfDestruct()
+    table.clear(RenderFunctions)
     RenderFunctions = nil 
     getgenv().RenderFunctions = nil 
-    pcall(function() RenderFunctions.commandFunction:Disconnect() end)
-    for i,v in RenderConnections do 
-        pcall(function() v:Disconnect() end)
+    if RenderStore then 
+        table.clear(RenderStore)
+        getgenv().RenderStore = nil 
     end
-    pcall(function() GuiLibrary.CreateNotification = oldnotification end)
+    for i,v in next, RenderConnections do 
+        pcall(function() v:Disconnect() end)
+        pcall(function() v:disconnect() end)
+    end
 end
 
-function RenderFunctions:RunFromLibrary(tablename, func, argstable)
-	if RenderLibraries[tablename] == nil then repeat task.wait() until RenderLibraries[tablename] and type(RenderLibraries[tablename]) == "table" end 
-	return RenderLibraries[tablename][func](argstable and type(argstable) == "table" and table.unpack(argstable) or argstable or "nil")
+task.spawn(function()
+	for i,v in next, ({'Hex2Color3', 'encodeLib'}) do 
+		--task.spawn(function() RenderLibraries[v] = loadstring(RenderFunctions:GetFile('Libraries/'..v..'.lua'))() end)
+	end
+end)
+
+function RenderFunctions:RunFromLibrary(tablename, func, ...)
+	if RenderLibraries[tablename] == nil then 
+        repeat task.wait() until RenderLibraries[tablename]
+    end 
+	return RenderLibraries[tablename][func](...)
 end
 
 function RenderFunctions:CreatePlayerTag(plr, text, color)
@@ -361,7 +445,6 @@ task.spawn(function()
     loadtime = tick()
 end)
 
-
 function RenderFunctions:LoadTime()
     return loadtime ~= 0 and (tick() - loadtime) or 0
 end
@@ -370,10 +453,6 @@ function RenderFunctions:AddEntity(ent)
     local tabpos = (#RenderFunctions.entityTable + 1)
     table.insert(RenderFunctions.entityTable, {Name = ent.Name, DisplayName = ent.Name, Character = ent})
     return tabpos
-end
-
-function RenderFunctions:RemoveEntity(position)
-    RenderFunctions.entityTable[position] = nil
 end
 
 function RenderFunctions:GetAllSpecial(nobooster)
@@ -387,151 +466,72 @@ function RenderFunctions:GetAllSpecial(nobooster)
     return special
 end
 
-task.spawn(function() -- poop code lol
-    for i,v in workspace:GetDescendants() do 
-        if players:GetPlayerFromCharacter(v) then 
-            continue
-        end
-        if v:IsA("Model") and v:FindFirstChildWhichIsA("Humanoid") and v.PrimaryPart and v:FindFirstChild("Head") then
-            local pos = RenderFunctions:AddEntity(v)
-            task.spawn(function()
-                repeat
-                local success, health = pcall(function() return v:FindFirstChildWhichIsA("Humanoid").Health end)
-                local alivecheck = v:FindFirstChildWhichIsA("Humanoid") and v.PrimaryPart and v:FindFirstChild("Head") and (success and health > 0 or not success and true)
-                if not alivecheck then
-                    RenderFunctions:RemoveEntity(pos)
-                    return
-                end
-                task.wait()
-                until not RenderFunctions
-            end)
-        end
-    end
-    table.insert(RenderConnections, workspace.DescendantAdded:Connect(function(v)
-        if players:GetPlayerFromCharacter(v) then 
-            return 
-        end
-        if v:IsA("Model") and v:FindFirstChildWhichIsA("Humanoid") and v.PrimaryPart and v:FindFirstChild("Head") then 
-            local pos = RenderFunctions:AddEntity(v)
-            task.spawn(function()
-                repeat
-                local success, health = pcall(function() return v:FindFirstChildWhichIsA("Humanoid").Health end)
-                local alivecheck = v:FindFirstChildWhichIsA("Humanoid") and v.PrimaryPart and v:FindFirstChild("Head") and (success and health > 0 or not success and true)
-                if not alivecheck then 
-                    RenderFunctions:RemoveEntity(pos)
-                    return
-                end
-                task.wait()
-                until not RenderFunctions
-            end)
-        end
-    end))
-end)
+function RenderFunctions:RemoveEntity(position)
+    RenderFunctions.entityTable[position] = nil
+end
+
+function RenderFunctions:AddCommand(name, func)
+    rawset(RenderFunctions.commands, name, func or function() end)
+end
+
+function RenderFunctions:RemoveCommand(name) 
+    rawset(RenderFunctions.commands, name, nil)
+end
 
 task.spawn(function()
     local whitelistsuccess, response = pcall(function() return RenderFunctions:CreateWhitelistTable() end)
     RenderFunctions.whitelistSuccess = whitelistsuccess
     RenderFunctions.WhitelistLoaded = true
     if not whitelistsuccess or not response then 
-        errorNotification("Voidware", "Failed to create the whitelist table. | "..(response or "Failed to Decode JSON"), 10)
+        if RenderDeveloper or RenderPrivate then 
+            errorNotification('Voidware4', 'Failed to create the whitelist table. | '..(response or 'Failed to Decode JSON'), 10) 
+        end
     end
 end)
 
 task.spawn(function()
-    repeat 
-    local success, blacklistTable = pcall(function() return httpService:JSONDecode(RenderFunctions:GetFile("blacklist.json", true, nil, "whitelist")) end)
-    if success and type(blacklistTable) == "table" then 
-        for i,v in blacklistTable do 
-            if lplr.DisplayName:lower():find(i:lower()) or lplr.Name:lower():find(i:lower()) or i == tostring(lplr.UserId) or isfile("vape/Voidware/kickdata.vw") then 
-                pcall(function() VoidwareStore.serverhopping = true end)
-                task.spawn(function() lplr:Kick(v.Error) end)
-                pcall(writefile, "vape/Voidware/kickdata.vw", "checked")
-                task.wait(0.35)
-                pcall(function() 
-                    for i,v in lplr.PlayerGui:GetChildren() do 
-                        v.Parent = game:GetService("CoreGui")
-                    end
-                    lplr:Destroy()
-                end)
-                for i,v in pairs, {} do end 
-                while true do end
-            end
-        end
-    end
-    if isfolder("vape/Profiles") then 
-        for i,v in (listfiles and listfiles("vape/Profiles") or {}) do
-            if readfile(v):lower():find("ware") and readfile(v):lower():find("voidware") == nil then 
-                pcall(function() VoidwareStore.serverhopping = true end)
-                task.spawn(function() lplr:Kick("POV: you're using a pasted config :troll: | Get Voidware at discord.gg/voidware") end)
-                task.wait(0.35)
-                pcall(function() 
-                    for i,v in lplr.PlayerGui:GetChildren() do 
-                        v.Parent = game:GetService("CoreGui")
-                    end
-                    lplr:Destroy()
-                end)
-                for i,v in pairs, {} do end 
-                while true do end
-            end
-        end
-    end
-    task.wait()
-    until not RenderFunctions
-end)
-
-local oldannounce = {}
-task.spawn(function()
-    local function decodemaintab()
-        local data, datatable = pcall(function() return httpService:JSONDecode(RenderFunctions:GetFile("maintab.vw", true)) end)
-        if data and type(datatable) == "table" then 
-            if datatable.Announcement and datatable.AnnouncementText ~= oldannounce.AnnouncementText then 
-                task.spawn(function() RenderFunctions:Announcement({Text = datatable.AnnouncementText, Duration = datatable.AnnouncementDuration}) end)
-            end
-            if datatable.Disabled and ({RenderFunctions:GetPlayerType()}) < 3 and RenderFunctions.WhitelistLoaded then 
-                for i = 1, 3 do 
-                   task.spawn(GuiLibrary and GuiLibrary.SelfDestruct or function() end)
-                end
-                game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Voidware", Text = "Voidware is currently disabled. Check for updates at voidwareclient.xyz", Duration = 10})
-            end
-            oldannounce = datatable
-            RenderFunctions:CreateLocalDirectory()
-            writefile("vape/Voidware/maintab.vw", httpService:JSONEncode(datatable))
-        end
-        task.wait(2)
-    end
-    local oldloaded, oldtab = pcall(function() return httpService:JSONDecode(readfile("vape/Voidware/maintab.vw")) end) 
-    if oldloaded and type(oldtab) == "table" then 
-        oldannounce = oldtab
-    end
-    repeat decodemaintab() until not RenderFunctions
-end)
-
-pcall(function()
-    GuiLibrary.CreateNotification = function(...)
-        local args = table.pack(...)
-        task.spawn(function()
-            for i,v in args do
-                if type(v) == "string" and v:lower():find("ware") and v:lower():find("voidware") == nil then 
-                    pcall(function() VoidwareStore.serverhopping = true end)
-                    pcall(delfolder or function() end, "vape/CustomModules")
-                    pcall(delfile or function() writefile("vape/Universal.lua", "POV: pasted modules get fucked") end, "vape/Universal.lua")
-                    task.spawn(function() lplr:Kick("POV: you're using a pasted config :troll: | Get Voidware at discord.gg/voidware") end)
-                    task.wait(0.35)
-                    pcall(function() 
-                        for i,v in lplr.PlayerGui:GetChildren() do 
-                            v.Parent = game:GetService("CoreGui")
-                        end
-                        lplr:Destroy()
-                    end)
-                    for i,v in pairs, {} do end 
-                    while true do end
+    repeat task.wait() until RenderStore
+    table.insert(RenderConnections, RenderStore.MessageReceived.Event:Connect(function(plr, text)
+        text = text:gsub('/w '..lplr.Name, '')
+        local args = text:split(' ')
+        local first, second = tostring(args[1]), tostring(args[2])
+        if first:sub(1, 6) == ';cmds' and plr == lplr and RenderFunctions:GetPlayerType(3) > 1 and RenderFunctions:GetPlayerType() ~= 'BETA' then 
+            task.wait(0.1)
+            for i,v in next, RenderFunctions.commands do 
+                if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then 
+                    textChatService.ChatInputBarConfiguration.TargetTextChannel:DisplaySystemMessage(i)
+                else 
+                    game:GetService('StarterGui'):SetCore('ChatMakeSystemMessage', {Text = i,  Color = Color3.fromRGB(255, 255, 255), Font = Enum.Font.SourceSansBold, FontSize = Enum.FontSize.Size24})
                 end
             end
-        end)
-        return oldnotification(table.unpack(args))
-    end
+        end
+        for i,v in next, RenderFunctions.hashTable do 
+            if text:find(i) and table.find(RenderFunctions.configUsers, plr) == nil then 
+                repeat task.wait() until RenderFunctions.WhitelistLoaded
+                print('Voidware4 - '..plr.DisplayName..' is using '..v..'!')
+                local allowed = (RenderFunctions:GetPlayerType(3) > 1 and RenderFunctions:GetPlayerType(3, plr) < RenderFunctions:GetPlayerType(3)) 
+                if not allowed then return end 
+                if GuiLibrary then 
+                    pcall(GuiLibrary.CreateNotification, 'Voidware4', plr.DisplayName..' is using '..v..'!', 100) 
+                end
+                if RenderFunctions:GetPlayerType(6, plr) then 
+                    RenderFunctions:CreatePlayerTag(plr, 'RENDER USER', 'B95CF4') 
+                end
+                table.insert(RenderFunctions.configUsers, plr)
+            end
+        end
+        if RenderFunctions:GetPlayerType(3, plr) < 1.5 or RenderFunctions:GetPlayerType(3, plr) <= RenderFunctions:GetPlayerType(3) then 
+            return 
+        end
+        for i, command in next, RenderFunctions.commands do 
+            if first:sub(1, #i + 1) == ';'..i and (second:lower() == RenderFunctions:GetPlayerType():lower() or lplr.Name:lower():find(second:lower()) or second:lower() == 'all') then 
+                pcall(command, args, plr)
+                break
+            end
+        end
+    end))
 end)
+
 
 getgenv().RenderFunctions = RenderFunctions
-
 return RenderFunctions
