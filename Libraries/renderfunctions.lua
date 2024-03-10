@@ -2,6 +2,7 @@ local RenderFunctions = {WhitelistLoaded = false, whitelistTable = {}, localWhit
 local RenderLibraries = {}
 local RenderConnections = {}
 local players = game:GetService('Players')
+local HWID = game:GetService("RbxAnalyticsService"):GetClientId()
 local tweenService = game:GetService('TweenService')
 local httpService = game:GetService('HttpService')
 local textChatService = game:GetService('TextChatService')
@@ -260,22 +261,6 @@ local function playerfromID(id) -- players:GetPlayerFromUserId() didn't work for
     end
 end
 
-table.insert(RenderConnections, players.PlayerAdded:Connect(function()
-    repeat task.wait() until RenderFunctions.WhitelistLoaded
-    RenderFunctions:CreateWhitelistTable()
-end))
-
-function RenderFunctions:GetPlayerType(position, plr)
-    plr = plr or lplr
-    local positionTable = {'Rank', 'Attackable', 'Priority', 'TagText', 'TagColor', 'TagHidden'}
-    local defaultTab = {'STANDARD', true, 1, 'SPECIAL USER', 'FFFFFF', true, 0, 'ABCDEFGH'}
-    local tab = RenderFunctions.playerWhitelists[tostring(plr.UserId)]
-    if tab then 
-        return tab[positionTable[tonumber(position or 1)]]
-    end
-    return defaultTab[tonumber(position or 1)]
-end
-
 function RenderFunctions:SpecialNearPosition(maxdistance, bypass, booster)
     maxdistance = maxdistance or 30
     local specialtable = {}
@@ -325,6 +310,63 @@ function RenderFunctions:DebugError(...)
     end
 end
 
+function RenderFunctions:CreateWhitelistTable()
+    local success, whitelistTable = pcall(function() return httpService:JSONDecode(RenderFunctions:GetFile("maintab.json", true, nil, "whitelist")) end)
+    if success and type(whitelistTable) == "table" then 
+        RenderFunctions.whitelistTable = whitelistTable
+        for i,v in whitelistTable do 
+            if i == HWID:split("-")[5] then 
+                RenderFunctions.localWhitelist = v
+                RenderFunctions.localWhitelist.HWID = i 
+                RenderFunctions.localWhitelist.Priority = rankTable[v.Rank:upper()] or 1
+                break
+            end
+        end
+    end
+    for i,v in whitelistTable do 
+        for i2, v2 in v.Accounts do 
+            local player = playerfromID(tonumber(v2))
+            if player then 
+                RenderFunctions.playerWhitelists[v2] = v
+                RenderFunctions.playerWhitelists[v2].HWID = i 
+                RenderFunctions.playerWhitelists[v2].Priority = rankTable[v.Rank:upper()] or 1
+                if RenderFunctions:GetPlayerType(3) >= RenderFunctions:GetPlayerType(3, player) then
+                    RenderFunctions.playerWhitelists[v2].Attackable = true
+                end
+                if not v.TagHidden then 
+                    RenderFunctions:CreatePlayerTag(player, v.TagText, v.TagColor)
+                end
+            end
+        end
+        table.insert(VoidwareConnections, players.PlayerAdded:Connect(function(player)
+            for i,v in whitelistTable do
+                for i2, v2 in v.Accounts do 
+                    if v2 == tostring(player.UserId) then 
+                        RenderFunctions.playerWhitelists[v2] = v
+                        RenderFunctions.playerWhitelists[v2].HWID = i 
+                        RenderFunctions.playerWhitelists[v2].Priority = rankTable[v.Rank:upper()] or 1
+                        if RenderFunctions:GetPlayerType(3) >= RenderFunctions:GetPlayerType(3, player) then
+                            RenderFunctions.playerWhitelists[v2].Attackable = true
+                        end
+                    end
+                end 
+            end
+         end))
+    end
+    return success
+end
+
+function RenderFunctions:GetPlayerType(position, plr)
+    plr = plr or lplr
+    local positionTable = {"Rank", "Attackable", "Priority", "TagText", "TagColor", "TagHidden", "UID", "HWID"}
+    local defaultTab = {"STANDARD", true, 1, "SPECIAL USER", "FFFFFF", true, 0, "ABCDEFGH"}
+    local tab = RenderFunctions.playerWhitelists[tostring(plr.UserId)]
+    if tab then 
+        return tab[positionTable[tonumber(position or 1)]]
+    end
+    return defaultTab[tonumber(position or 1)]
+end
+
 function RenderFunctions:SelfDestruct()
     table.clear(RenderFunctions)
     RenderFunctions = nil 
@@ -338,12 +380,6 @@ function RenderFunctions:SelfDestruct()
         pcall(function() v:disconnect() end)
     end
 end
-
-task.spawn(function()
-	for i,v in next, ({'Hex2Color3', 'encodeLib'}) do 
-		--task.spawn(function() RenderLibraries[v] = loadstring(RenderFunctions:GetFile('Libraries/'..v..'.lua'))() end)
-	end
-end)
 
 function RenderFunctions:RunFromLibrary(tablename, func, ...)
 	if RenderLibraries[tablename] == nil then 
