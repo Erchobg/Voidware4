@@ -7,7 +7,6 @@
     discord.gg/render
 
 ]]
-
 local GuiLibrary = shared.GuiLibrary
 local httpService = game:GetService('HttpService')
 local teleportService = game:GetService('TeleportService')
@@ -13831,3 +13830,5 @@ GuiLibrary.ObjectsThatCanBeSaved.UtilityWindow.Api.CreateOptionsButton({
 	HoverText = 'Disables the movement controls on lagback.',
 	Function = function() end
 })
+
+print("hi")
