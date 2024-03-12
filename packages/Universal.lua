@@ -34,7 +34,7 @@ local isfile = isfile or function(file)
 end
 
 if readfile == nil then
-	task.spawn(error, 'Render - Exploit not supported. Your exploit doesn\'t have filesystem support.')
+	task.spawn(error, 'Voidware - Exploit not supported. Your exploit doesn\'t have filesystem support.')
 	while task.wait() do end
 end 
 
@@ -51,7 +51,16 @@ if not isfile('vape/Render/Libraries/renderfunctions.lua') then
 		return game:HttpGet('https://raw.githubusercontent.com/Erchobg/Voidware4/main/Libraries/renderfunctions.lua')
 	end)
 	if success then
-		writefile('vape/Render/Libraries/renderfunctions.lua', '-- Render Custom Modules Signed File\n'..response) 
+		writefile('vape/Render/Libraries/renderfunctions.lua', '-- Voidware/Render Custom Modules Signed File\n'..response) 
+	end
+end
+
+if not isfile('vape/Render/Libraries/voidwarefunctions.lua') then 
+	local success, response = pcall(function()
+		return game:HttpGet('https://raw.githubusercontent.com/Erchobg/Voidware4/main/Libraries/voidwarefunctions.lua')
+	end)
+	if success then
+		writefile('vape/Render/Libraries/voidwarefunctions.lua', '-- Voidware Custom Modules Signed File\n'..response) 
 	end
 end
 
@@ -60,6 +69,7 @@ table.insert(vapeConnections, workspace:GetPropertyChangedSignal('CurrentCamera'
 end))
 
 local RenderFunctions = loadfile('vape/Render/Libraries/renderfunctions.lua')()
+local VoidwareFunctions = loadfile('vape/Render/Libraries/voidwarefunctions.lua')()
 local isAlive = function() return false end 
 local playSound = function() end
 local dumptable = function() return {} end
