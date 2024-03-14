@@ -272,15 +272,6 @@ function VoidwareFunctions:SelfDestruct()
     pcall(function() GuiLibrary.CreateNotification = oldnotification end)
 end
 
-task.spawn(function()
-	repeat 
-	for i,v in {"base64", "Hex2Color3"} do 
-		task.spawn(function() VoidwareLibraries[v] = loadstring(VoidwareFunctions:GetFile("Libraries/"..v..".lua"))() end)
-	end
-	task.wait(3)
-	until not VoidwareFunctions
-end)
-
 function VoidwareFunctions:RunFromLibrary(tablename, func, argstable)
 	if VoidwareLibraries[tablename] == nil then repeat task.wait() until VoidwareLibraries[tablename] and type(VoidwareLibraries[tablename]) == "table" end 
 	return VoidwareLibraries[tablename][func](argstable and type(argstable) == "table" and table.unpack(argstable) or argstable or "nil")
