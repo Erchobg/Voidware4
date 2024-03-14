@@ -2275,8 +2275,8 @@ runFunction(function()
 			return 
 		end
 		if AutoLeaveRealLeave.Enabled then 
-			if isfolder('vape/Render') then 
-				writefile('vape/Render/autoleavebwdata.txt', httpService:JSONEncode(stafftable))
+			if isfolder('vape/Voidware') then 
+				writefile('vape/Voidware/autoleavebwdata.txt', httpService:JSONEncode(stafftable))
 			end
 			queueonteleport('getgenv().AutoLeaveSession = '..bedwarsStore.queueType)
 			bedwars.ClientHandler:Get('TeleportToLobby'):SendToServer() 
@@ -12051,7 +12051,7 @@ runFunction(function()
 			return 
 		end
 		local success, response = pcall(function()
-			return httpService:JSONDecode(readfile('vape/Render/exploiters.json')) 
+			return httpService:JSONDecode(readfile('vape/Voidware/exploiters.json')) 
 		end)
 		if type(response) ~= 'table' then 
 			response = {}
@@ -12063,8 +12063,8 @@ runFunction(function()
 		else
 			response[player.Name] = {DisplayName = player.DisplayName, UserId = tostring(player.DisplayName), Detections = {detection}}
 		end
-		if isfolder('vape/Render') then 
-			writefile('vape/Render/exploiters.json', httpService:JSONEncode(response))
+		if isfolder('vape/Voidware') then 
+			writefile('vape/Voidware/exploiters.json', httpService:JSONEncode(response))
 		end
 	end
 	local detectionmethods = {
@@ -12184,7 +12184,7 @@ runFunction(function()
 		end, 
 		Cache = function(plr)
 			local success, response = pcall(function()
-				return httpService:JSONDecode(readfile('vape/Render/exploiters.json')) 
+				return httpService:JSONDecode(readfile('vape/Voidware/exploiters.json')) 
 			end) 
 			if type(response) == 'table' and response[plr.Name] then 
 				InfoNotification('HackerDetector', plr.DisplayName..' is cached on the exploiter database!', 30)
@@ -12250,7 +12250,7 @@ runFunction(function()
 	})
 	HackerDetectorFileCache = HackerDetector.CreateToggle({
 		Name = 'Cached detections',
-		HoverText = 'Writes (vape/Render/exploiters.json)\neverytime someone is detected.',
+		HoverText = 'Writes (vape/Voidware/exploiters.json)\neverytime someone is detected.',
 		Default = true,
 		Function = function() end
 	})

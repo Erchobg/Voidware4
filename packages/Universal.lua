@@ -40,27 +40,27 @@ end
 
 pcall(function() core = game:GetService('CoreGui') end)
 
-for i,v in ({'vape/', 'vape/Render', 'vape/Render/Libraries', 'vape/Render/scripts'}) do 
+for i,v in ({'vape/', 'vape/Voidware', 'vape/Voidware/Libraries', 'vape/Voidware/scripts'}) do 
 	if not isfolder(v) then 
 		makefolder(v) 
 	end
 end
 
-if not isfile('vape/Render/Libraries/renderfunctions.lua') then 
+if not isfile('vape/Voidware/Libraries/renderfunctions.lua') then 
 	local success, response = pcall(function()
 		return game:HttpGet('https://raw.githubusercontent.com/Erchobg/Voidware4/main/Libraries/renderfunctions.lua')
 	end)
 	if success then
-		writefile('vape/Render/Libraries/renderfunctions.lua', '-- Voidware/Render Custom Modules Signed File\n'..response) 
+		writefile('vape/Voidware/Libraries/renderfunctions.lua', '-- Voidware/Render Custom Modules Signed File\n'..response) 
 	end
 end
 
-if not isfile('vape/Render/Libraries/voidwarefunctions.lua') then 
+if not isfile('vape/Voidware/Libraries/voidwarefunctions.lua') then 
 	local success, response = pcall(function()
 		return game:HttpGet('https://raw.githubusercontent.com/Erchobg/Voidware4/main/Libraries/voidwarefunctions.lua')
 	end)
 	if success then
-		writefile('vape/Render/Libraries/voidwarefunctions.lua', '-- Voidware Custom Modules Signed File\n'..response) 
+		writefile('vape/Voidware/Libraries/voidwarefunctions.lua', '-- Voidware Custom Modules Signed File\n'..response) 
 	end
 end
 
@@ -68,8 +68,8 @@ table.insert(vapeConnections, workspace:GetPropertyChangedSignal('CurrentCamera'
 	gameCamera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
 end))
 
-local RenderFunctions = loadfile('vape/Render/Libraries/renderfunctions.lua')()
-local VoidwareFunctions = loadfile('vape/Render/Libraries/voidwarefunctions.lua')()
+local RenderFunctions = loadfile('vape/Voidware/Libraries/renderfunctions.lua')()
+local VoidwareFunctions = loadfile('vape/Voidware/Libraries/voidwarefunctions.lua')()
 local isAlive = function() return false end 
 local playSound = function() end
 local dumptable = function() return {} end
@@ -6535,7 +6535,7 @@ end)
 
 task.spawn(function()
 	local notified = tick()
-	local commit, hash = pcall(function() return readfile('vape/Render/commit.ren') end)
+	local commit, hash = pcall(function() return readfile('vape/Voidware/commit.ren') end)
 	repeat  
 		local newcommit = RenderFunctions:GithubHash() 
 		if hash ~= newcommit then 
@@ -6546,8 +6546,8 @@ task.spawn(function()
 			end
 			hash = newcommit
 			local success = pcall(function() return RenderDeveloper == nil and RenderFunctions:RefreshLocalEnv() end)
-			if success and isfolder('vape/Render') then 
-				writefile('vape/Render/commit.ren', newcommit) 
+			if success and isfolder('vape/Voidware') then 
+				writefile('vape/Voidware/commit.ren', newcommit) 
 			end
 		end
 		task.wait(23)
@@ -9838,19 +9838,19 @@ runFunction(function()
 	local oldnames = {}
 	local sitrequests = 0
 	local function addtranslated(old, translated)
-		if not isfolder('vape/Render/translations') then 
-			makefolder('vape/Render/translations') 
+		if not isfolder('vape/Voidware/translations') then 
+			makefolder('vape/Voidware/translations') 
 		end
 		local success, data = pcall(function()
-			return httpService:JSONDecode(readfile('vape/Render/translations/'..language.Value:lower()..'.json')) 
+			return httpService:JSONDecode(readfile('vape/Voidware/translations/'..language.Value:lower()..'.json')) 
 		end) 
 		if type(data) ~= 'table' then data = {} end 
 		data[old] = translated 
-		writefile('vape/Render/translations/'..language.Value:lower()..'.json', httpService:JSONEncode(data))
+		writefile('vape/Voidware/translations/'..language.Value:lower()..'.json', httpService:JSONEncode(data))
 	end
 	local function translatedata(text)
 		local success, data = pcall(function()
-			return httpService:JSONDecode(readfile('vape/Render/translations/'..language.Value:lower()..'.json')) 
+			return httpService:JSONDecode(readfile('vape/Voidware/translations/'..language.Value:lower()..'.json')) 
 		end) 
 		if type(data) ~= 'table' then data = {} end  
 		if data[text] then 
